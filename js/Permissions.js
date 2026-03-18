@@ -2,11 +2,13 @@
 // نظام الصلاحيات المتقدم - Roles & Permissions
 // =====================================================
 
-// الوصول إلى users من localStorage مباشرة
-function getUsers() {
+// دالة مساعدة للحصول على المستخدمين
+function getStoredUsers() {
     try {
-        return JSON.parse(localStorage.getItem('dentflow_users')) || [];
-    } catch(e) {
+        const stored = localStorage.getItem('dentflow_users');
+        return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+        console.error('خطأ في قراءة المستخدمين:', e);
         return [];
     }
 }
@@ -43,31 +45,35 @@ function getRoleName(role) {
     return roles[role] || role;
 }
 
-// الحصول على الأدوار المتاحة للتسجيل
+// ========== دالة الأدوار المتاحة (مضمونة 100%) ==========
 function getAvailableRoles() {
     console.log('🔍 getAvailableRoles is called');
     
-    // جلب المستخدمين مباشرة من localStorage
-    const users = getUsers();
+    // جلب المستخدمين من localStorage مباشرة
+    const users = getStoredUsers();
     const totalUsers = users.length;
     
-    console.log('📊 عدد المستخدمين في localStorage:', totalUsers);
+    console.log('📊 عدد المستخدمين:', totalUsers);
     
-    // أول مرة في الموقع (لا يوجد مستخدمين)
+    // ===== المنطق المطلوب =====
+    // أول مرة (لا يوجد مستخدمين) → مدير + مريض
     if (totalUsers === 0) {
-        console.log('👉 أول مرة - نعرض مدير ومريض فقط');
+        console.log('👉 لا يوجد مستخدمين - نعرض مدير ومريض');
         return ['patient', 'admin'];
     }
     
     // التحقق من وجود مدير
-    const hasAdmin = users.some(u => u.role === 'admin' || u.type === 'admin');
+    const hasAdmin = users.some(user => 
+        user.role === 'admin' || user.type === 'admin'
+    );
     
+    // إذا لم يكن هناك مدير بعد → نعرض مدير ومريض
     if (!hasAdmin) {
         console.log('👉 لا يوجد مدير - نعرض مدير ومريض');
         return ['patient', 'admin'];
     }
     
-    // بعد وجود مدير
+    // يوجد مدير بالفعل → مريض فقط
     console.log('👉 يوجد مدير - نعرض مريض فقط');
     return ['patient'];
 }
@@ -78,11 +84,7 @@ function toggleRoleField() {
     const clinicField = document.getElementById('clinicField');
     
     if (clinicField) {
-        if (type === 'doctor' || type === 'admin') {
-            clinicField.style.display = 'block';
-        } else {
-            clinicField.style.display = 'none';
-        }
+        clinicField.style.display = (type === 'doctor' || type === 'admin') ? 'block' : 'none';
     }
 }
 
@@ -95,9 +97,20 @@ function canEdit(patientId) {
     if (role === 'admin') return false;
     if (role === 'doctor') return true;
     if (role === 'assistant') return false;
-    if (role === 'patient') {
-        return currentUser.id === patientId;
-    }
+    if (role === 'patient') return currentUser.id === patientId;
     
     return false;
 }
+
+// دالة التحقق من وجود مدير (مساعدة)
+function isAdminExists() {
+    const users = getStoredUsers();
+    return users.some(user => user.role === 'admin' || user.type === 'admin');
+}
+
+// دالة الحصول على عدد المستخدمين
+function getUsersCount() {
+    return getStoredUsers().length;
+}
+
+console.log('✅ permissions.js loaded successfully');
