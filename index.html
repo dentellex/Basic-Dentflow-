@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DentFlow • النظام المتكامل مع دعم اللغات والتحسينات</title>
+    <!-- Bootstrap 5.3 RTL -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.rtl.min.css">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Lateef:wght@400;600;800&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap Datepicker -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.standalone.min.css">
+    <!-- ملف التنسيقات الخاص بنا -->
+    <link rel="stylesheet" href="css/style.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- particles.js -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <!-- bcryptjs & CryptoJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Datepicker JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.ar.min.js"></script>
+    <!-- jsPDF و html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div id="particles-js"></div>
+    <div id="loadingOverlay"><div class="spinner"></div></div>
+
+    <!-- شاشة الدخول -->
+    <div id="authWrapper" class="auth-wrapper">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <div class="logo-icon"><i class="fas fa-tooth"></i></div>
+                <div class="logo-text">Dent<span>Flow</span></div>
+            </div>
+            <!-- إضافة اختيار اللغة -->
+            <div class="lang-switch">
+                <button id="langAuthAr" class="active">
+                    <img src="https://flagcdn.com/w40/eg.png" class="lang-flag" alt="العربية"> العربية
+                </button>
+                <button id="langAuthEn">
+                    <img src="https://flagcdn.com/w40/us.png" class="lang-flag" alt="English"> English
+                </button>
+            </div>
+            <div class="auth-tabs d-flex">
+                <button class="btn active" id="tabLogin" data-i18n="login">تسجيل الدخول</button>
+                <button class="btn" id="tabRegister" data-i18n="register">إنشاء حساب</button>
+            </div>
+            <!-- نموذج تسجيل الدخول -->
+            <div id="loginForm" class="auth-form active">
+                <select id="loginType" class="form-select custom-select">
+                    <option value="patient" data-i18n="patient">مريض</option>
+                    <option value="doctor" data-i18n="doctor">طبيب</option>
+                    <option value="assistant">مساعد</option>
+                    <option value="receptionist">استقبال</option>
+                    <option value="admin">مدير النظام</option>
+                </select>
+                <input type="text" id="loginUsername" class="form-control" placeholder="اسم المستخدم" data-i18n-placeholder="username">
+                <div class="error-feedback" id="loginUsernameError"></div>
+                <div class="password-field">
+                    <input type="password" id="loginPassword" class="form-control" placeholder="كلمة المرور" data-i18n-placeholder="password">
+                    <i class="fas fa-eye toggle-password" onclick="togglePassword('loginPassword', this)"></i>
+                </div>
+                <div class="error-feedback" id="loginPasswordError"></div>
+                <button class="btn-accent" id="loginBtn" data-i18n="login">دخول</button>
+            </div>
+            <!-- نموذج إنشاء حساب -->
+            <div id="registerForm" class="auth-form">
+                <select id="regType" class="form-select custom-select" onchange="toggleRoleField()">
+                    <option value="patient" data-i18n="patient">مريض</option>
+                    <option value="doctor" data-i18n="doctor">طبيب</option>
+                    <option value="assistant">مساعد</option>
+                    <option value="receptionist">استقبال</option>
+                    <option value="admin">مدير النظام</option>
+                </select>
+                <input type="text" id="regName" class="form-control" placeholder="الاسم الكامل" data-i18n-placeholder="fullName">
+                <input type="text" id="regUsername" class="form-control" placeholder="اسم المستخدم" data-i18n-placeholder="username">
+                <div class="password-field">
+                    <input type="password" id="regPassword" class="form-control" placeholder="كلمة المرور" data-i18n-placeholder="password">
+                    <i class="fas fa-eye toggle-password" onclick="togglePassword('regPassword', this)"></i>
+                </div>
+                <!-- حقل العيادة (يظهر للطبيب والمدير فقط) -->
+                <div id="clinicField" style="display: none;">
+                    <input type="text" id="regClinic" class="form-control" placeholder="اسم العيادة" data-i18n-placeholder="clinicName">
+                </div>
+                 <!-- حقل doctorField للتأكد من عدم وجود أخطاء -->
+                   <div id="doctorField" style="display: none;"></div>
+                <button class="btn-accent" id="registerBtn" data-i18n="register">تسجيل</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال حذف الحساب -->
+    <div class="modal fade" id="deleteAccountModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content glass-card">
+                <div class="modal-header">
+                    <h5 class="modal-title" data-i18n="confirmDeleteAccount">تأكيد حذف الحساب</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p data-i18n="deleteWarning">هل أنت متأكد؟ لا يمكن التراجع عن هذا الإجراء.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="cancel">إلغاء</button>
+                    <button class="btn btn-danger" id="confirmDeleteAccount" data-i18n="deleteConfirm">حذف نهائي</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال إعادة تعيين التطبيق -->
+    <div class="modal fade" id="resetAppModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content glass-card">
+                <div class="modal-header">
+                    <h5 class="modal-title" data-i18n="resetData">مسح جميع البيانات</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p data-i18n="resetWarning">سيتم حذف جميع المستخدمين والمواعيد. هل أنت متأكد؟</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="cancel">إلغاء</button>
+                    <button class="btn btn-danger" id="confirmResetApp" data-i18n="resetConfirm">مسح الكل</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال تجديد الاشتراك -->
+    <div class="modal fade" id="subscriptionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content glass-card">
+                <div class="modal-header">
+                    <h5 class="modal-title" data-i18n="renewSubscription">تجديد الاشتراك</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p data-i18n="subscriptionExpired">انتهت صلاحية اشتراكك. يرجى تجديد الاشتراك لمواصلة استخدام النظام.</p>
+                    <button class="btn btn-accent w-100" onclick="startSubscription()" data-i18n="renewNow">تجديد الاشتراك (شهر واحد)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال تغيير الصورة الشخصية -->
+    <div class="modal fade" id="uploadPicModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content glass-card">
+                <div class="modal-header">
+                    <h5 class="modal-title" data-i18n="changeProfilePic">تغيير الصورة الشخصية</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="file" id="profilePicUpload" accept="image/*" class="form-control">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="cancel">إلغاء</button>
+                    <button class="btn btn-primary" id="saveProfilePic" data-i18n="save">حفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال تحديد موعد متابعة -->
+    <div class="modal fade" id="followupModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content glass-card">
+                <div class="modal-header">
+                    <h5 class="modal-title" data-i18n="setFollowup">تحديد موعد متابعة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label" data-i18n="date">التاريخ</label>
+                    <input type="text" class="form-control datepicker" id="followupDate">
+                    <label class="form-label mt-3" data-i18n="time">الوقت</label>
+                    <input type="time" class="form-control" id="followupTime">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="cancel">إلغاء</button>
+                    <button class="btn btn-primary" id="saveFollowup" data-i18n="save">حفظ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال اختيار السن -->
+    <div class="modal fade" id="toothModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content glass-card">
+                <div class="modal-header">
+                    <h5 class="modal-title" data-i18n="selectTooth">اختر موقع الألم</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <svg viewBox="0 0 400 200" style="max-width:100%;height:auto;">
+                        <rect x="50" y="20" width="300" height="50" fill="rgba(255,255,255,0.1)" stroke="#00cec9" />
+                        <text x="180" y="50" fill="white" font-size="16" font-weight="bold" data-i18n="upperJaw">الفك العلوي</text>
+                        <g>
+                            <circle cx="80" cy="80" r="12" fill="#00cec9" class="tooth-selector" data-tooth="18" style="cursor:pointer;" />
+                            <text x="76" y="85" fill="white" font-size="12">18</text>
+                            <circle cx="110" cy="80" r="12" fill="#00cec9" class="tooth-selector" data-tooth="17" style="cursor:pointer;" />
+                            <text x="106" y="85" fill="white">17</text>
+                            <circle cx="140" cy="80" r="12" fill="#00cec9" class="tooth-selector" data-tooth="16" style="cursor:pointer;" />
+                            <text x="136" y="85" fill="white">16</text>
+                            <circle cx="170" cy="80" r="12" fill="#00cec9" class="tooth-selector" data-tooth="15" style="cursor:pointer;" />
+                            <text x="166" y="85" fill="white">15</text>
+                            <circle cx="200" cy="80" r="12" fill="#00cec9" class="tooth-selector" data-tooth="14" style="cursor:pointer;" />
+                            <text x="196" y="85" fill="white">14</text>
+                            <circle cx="230" cy="80" r="12" fill="#00cec9" class="tooth-selector" data-tooth="13" style="cursor:pointer;" />
+                            <text x="226" y="85" fill="white">13</text>
+                            <circle cx="260" cy="80" r="12" fill="#00cec9" class="tooth-selector" data-tooth="12" style="cursor:pointer;" />
+                            <text x="256" y="85" fill="white">12</text>
+                            <circle cx="290" cy="80" r="12" fill="#00cec9" class="tooth-selector" data-tooth="11" style="cursor:pointer;" />
+                            <text x="286" y="85" fill="white">11</text>
+                        </g>
+                        <rect x="50" y="120" width="300" height="50" fill="rgba(255,255,255,0.1)" stroke="#00cec9" />
+                        <text x="180" y="150" fill="white" font-size="16" font-weight="bold" data-i18n="lowerJaw">الفك السفلي</text>
+                        <g>
+                            <circle cx="80" cy="180" r="12" fill="#00cec9" class="tooth-selector" data-tooth="48" style="cursor:pointer;" />
+                            <text x="76" y="185" fill="white">48</text>
+                            <circle cx="110" cy="180" r="12" fill="#00cec9" class="tooth-selector" data-tooth="47" style="cursor:pointer;" />
+                            <text x="106" y="185" fill="white">47</text>
+                            <circle cx="140" cy="180" r="12" fill="#00cec9" class="tooth-selector" data-tooth="46" style="cursor:pointer;" />
+                            <text x="136" y="185" fill="white">46</text>
+                            <circle cx="170" cy="180" r="12" fill="#00cec9" class="tooth-selector" data-tooth="45" style="cursor:pointer;" />
+                            <text x="166" y="185" fill="white">45</text>
+                            <circle cx="200" cy="180" r="12" fill="#00cec9" class="tooth-selector" data-tooth="44" style="cursor:pointer;" />
+                            <text x="196" y="185" fill="white">44</text>
+                            <circle cx="230" cy="180" r="12" fill="#00cec9" class="tooth-selector" data-tooth="43" style="cursor:pointer;" />
+                            <text x="226" y="185" fill="white">43</text>
+                            <circle cx="260" cy="180" r="12" fill="#00cec9" class="tooth-selector" data-tooth="42" style="cursor:pointer;" />
+                            <text x="256" y="185" fill="white">42</text>
+                            <circle cx="290" cy="180" r="12" fill="#00cec9" class="tooth-selector" data-tooth="41" style="cursor:pointer;" />
+                            <text x="286" y="185" fill="white">41</text>
+                        </g>
+                    </svg>
+                    <p class="mt-2" data-i18n="clickTooth">انقر على السن الذي يؤلمك</p>
+                    <input type="hidden" id="selectedTooth">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" id="confirmTooth" data-i18n="confirm">تأكيد</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال عرض العقد -->
+    <div class="modal fade" id="contractViewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content glass-card">
+                <div class="modal-header">
+                    <h5 class="modal-title" data-i18n="contract">العقد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="contractViewBody">
+                    <!-- محتوى العقد سيتم تعبئته ديناميكياً -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="close">إغلاق</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال صور الحالة مع مشاهد -->
+    <div class="modal fade image-viewer-modal" id="caseImagesModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content glass-card">
+                <div class="modal-header">
+                    <h5 class="modal-title" data-i18n="caseImages">صور الحالة</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="caseImagesBody">
+                    <!-- سيتم تعبئته بالصور مع أزرار التنقل -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="close">إغلاق</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال طلب تعديل العقد -->
+    <div class="modal fade" id="contractModifyRequestModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content glass-card">
+                <div class="modal-header">
+                    <h5 class="modal-title" data-i18n="modifyRequest">طلب تعديل العقد</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p data-i18n="modifyRequestText">يريد الطبيب تعديل التشخيص أو خطة العلاج. هل توافق؟</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-success" id="approveModify">موافقة</button>
+                    <button class="btn btn-danger" id="rejectModify">رفض</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- التطبيق الرئيسي -->
+    <div id="mainApp">
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-2 col-md-3 sidebar" id="sidebar">
+                    <div class="sidebar-content">
+                        <div class="logo">
+                            <div class="logo-icon"><i class="fas fa-tooth"></i></div>
+                            <div class="logo-text">Dent<span>Flow</span></div>
+                        </div>
+                        <div class="user-info" id="sidebarUserInfo"></div>
+                        <nav class="nav flex-column nav-pills" id="v-pills-tab" role="tablist"></nav>
+                        <button id="darkModeToggle" class="mt-3"><i class="fas fa-moon"></i> <span data-i18n="darkMode">الوضع الليلي</span></button>
+                        <button id="langToggle" class="mt-2"><i class="fas fa-language"></i> <span data-i18n="english">English</span></button>
+                        <button class="delete-account-btn mt-3" id="deleteAccountBtn"><i class="fas fa-trash-alt"></i> <span data-i18n="deleteAccount">حذف حسابي</span></button>
+                        <button class="reset-app-btn mt-2" id="resetAppBtn"><i class="fas fa-undo-alt"></i> <span data-i18n="resetApp">إعادة تعيين التطبيق</span></button>
+                    </div>
+                    <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span data-i18n="logout">تسجيل خروج</span></button>
+                </div>
+                <div class="col-lg-10 col-md-9 main-content" id="mainContent">
+                    <div class="tab-content" id="v-pills-tabContent"></div>
+                    <div class="footer">
+                        <i class="fas fa-tooth me-2" style="color: #00cec9;"></i> <span data-i18n="copyright">جميع الحقوق محفوظة &copy; 2025 DentFlow</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="customToast" class="custom-toast" style="display: none;">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">تمت العملية بنجاح</span>
+    </div>
+     <!-- بداية إدارة المستخدمين -->
+<div id="users" style="display: none;">
+    <h2>إدارة المستخدمين</h2>
+    
+    <div class="card mb-3">
+        <div class="card-header">إضافة مستخدم جديد</div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <input type="text" class="form-control" id="newUserName" placeholder="الاسم">
+                </div>
+                <div class="col-md-3">
+                    <input type="text" class="form-control" id="newUserUsername" placeholder="اسم المستخدم">
+                </div>
+                <div class="col-md-2">
+                    <input type="password" class="form-control" id="newUserPassword" placeholder="كلمة المرور">
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="newUserRole">
+                        <option value="doctor">طبيب</option>
+                        <option value="assistant">مساعد</option>
+                        <option value="receptionist">استقبال</option>
+                        <option value="admin">مدير</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-primary w-100" onclick="addNewUser()">إضافة</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">قائمة المستخدمين</div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>الاسم</th>
+                        <th>اسم المستخدم</th>
+                        <th>الدور</th>
+                        <th>تاريخ الإنشاء</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTable">
+                    <tr><td colspan="5" class="text-center">لا يوجد مستخدمين</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<!-- نهاية إدارة المستخدمين -->
+
+    <!-- نظام الصلاحيات -->
+    <script src="js/permissions.js"></script>
+    <!-- المكتبة العلمية للأدوية -->
+    <script src="js/medicationsDB.js"></script>
+    <!-- ملف JavaScript الرئيسي -->
+    <script src="js/script.js"></script>
+</body>
+</html>
