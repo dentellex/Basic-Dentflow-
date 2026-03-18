@@ -2,6 +2,15 @@
 // نظام الصلاحيات المتقدم - Roles & Permissions
 // =====================================================
 
+// الوصول إلى users من localStorage مباشرة
+function getUsers() {
+    try {
+        return JSON.parse(localStorage.getItem('dentflow_users')) || [];
+    } catch(e) {
+        return [];
+    }
+}
+
 // التحقق من الصلاحيات
 function hasPermission(permission) {
     if (typeof currentUser === 'undefined' || !currentUser) return false;
@@ -9,10 +18,10 @@ function hasPermission(permission) {
     const role = currentUser.role || currentUser.type || 'patient';
     
     const permissions = {
-        'admin': ['all', 'manage_users', 'view_only', 'view_all', 'create_invoice', 'edit_appointment', 'delete_data', 'suspend_doctor', 'view_audit_logs'],
-        'doctor': ['edit_diagnosis', 'view_all', 'create_invoice', 'edit_appointment', 'add_notes', 'view_own_stats'],
-        'assistant': ['view_all', 'add_patient_data', 'edit_appointment', 'view_medical_history'],
-        'receptionist': ['view_basic', 'edit_appointment', 'add_patient'],
+        'admin': ['all', 'manage_users', 'view_only', 'view_all', 'create_invoice', 'edit_appointment', 'delete_data'],
+        'doctor': ['edit_diagnosis', 'view_all', 'create_invoice', 'edit_appointment'],
+        'assistant': ['view_all', 'add_patient_data', 'edit_appointment'],
+        'receptionist': ['view_basic', 'edit_appointment'],
         'patient': ['view_own']
     };
     
@@ -38,26 +47,27 @@ function getRoleName(role) {
 function getAvailableRoles() {
     console.log('🔍 getAvailableRoles is called');
     
-    // الوصول إلى users من النطاق العام
-    let totalUsers = 0;
-    let hasAdmin = false;
+    // جلب المستخدمين مباشرة من localStorage
+    const users = getUsers();
+    const totalUsers = users.length;
     
-    if (typeof users !== 'undefined' && users && Array.isArray(users)) {
-        totalUsers = users.length;
-        // التحقق من وجود مدير
-        hasAdmin = users.some(u => u.role === 'admin' || u.type === 'admin');
+    console.log('📊 عدد المستخدمين في localStorage:', totalUsers);
+    
+    // أول مرة في الموقع (لا يوجد مستخدمين)
+    if (totalUsers === 0) {
+        console.log('👉 أول مرة - نعرض مدير ومريض فقط');
+        return ['patient', 'admin'];
     }
     
-    console.log('📊 عدد المستخدمين:', totalUsers);
-    console.log('👑 يوجد مدير؟', hasAdmin);
+    // التحقق من وجود مدير
+    const hasAdmin = users.some(u => u.role === 'admin' || u.type === 'admin');
     
-    // إذا كان لا يوجد مدير بعد
     if (!hasAdmin) {
         console.log('👉 لا يوجد مدير - نعرض مدير ومريض');
         return ['patient', 'admin'];
     }
     
-    // إذا كان هناك مدير بالفعل
+    // بعد وجود مدير
     console.log('👉 يوجد مدير - نعرض مريض فقط');
     return ['patient'];
 }
@@ -66,7 +76,6 @@ function getAvailableRoles() {
 function toggleRoleField() {
     const type = document.getElementById('regType')?.value;
     const clinicField = document.getElementById('clinicField');
-    const doctorField = document.getElementById('doctorField');
     
     if (clinicField) {
         if (type === 'doctor' || type === 'admin') {
@@ -74,10 +83,6 @@ function toggleRoleField() {
         } else {
             clinicField.style.display = 'none';
         }
-    }
-    
-    if (doctorField) {
-        doctorField.style.display = 'none';
     }
 }
 
@@ -87,60 +92,12 @@ function canEdit(patientId) {
     
     const role = currentUser.role || currentUser.type;
     
-    // المدير: view only (ميقدرش يعدل)
     if (role === 'admin') return false;
-    
-    // الطبيب: يقدر يعدل
     if (role === 'doctor') return true;
-    
-    // المساعد: لا يعدل (يبقى view only)
     if (role === 'assistant') return false;
-    
-    // المريض: يقرأ فقط ملفه
     if (role === 'patient') {
         return currentUser.id === patientId;
     }
     
     return false;
 }
-
-// التحقق من صلاحية تعليق طبيب
-function canSuspendDoctor() {
-    return hasPermission('suspend_doctor');
-}
-
-// الحصول على قائمة الأدوار للتقييم
-function getAvailableRolesForRating() {
-    return ['patient'];
-}
-
-// التحقق مما إذا كان المستخدم مسؤولاً
-function isAdmin() {
-    const role = currentUser?.role || currentUser?.type;
-    return role === 'admin';
-}
-
-// التحقق مما إذا كان المستخدم طبيباً
-function isDoctor() {
-    const role = currentUser?.role || currentUser?.type;
-    return role === 'doctor';
-}
-
-// التحقق مما إذا كان المستخدم مساعداً
-function isAssistant() {
-    const role = currentUser?.role || currentUser?.type;
-    return role === 'assistant';
-}
-
-// التحقق مما إذا كان المستخدم موظف استقبال
-function isReceptionist() {
-    const role = currentUser?.role || currentUser?.type;
-    return role === 'receptionist';
-}
-
-// التحقق مما إذا كان المستخدم مريضاً
-function isPatient() {
-    const role = currentUser?.role || currentUser?.type;
-    return role === 'patient';
-}
-// ✅ نهاية الملف - لا يوجد أقواس زائدة
